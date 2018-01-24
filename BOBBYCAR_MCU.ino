@@ -1,23 +1,37 @@
 //------------------------------------ BOBBYCAR_MCU ------------------------//
 
-#include"FastLED.h"
+//LED ANORDNUNG: MCU > (0,1,2,3,4,5,6,7,8,9), (10),   (11,12),       (13,14)
+//                      Rücklicht           , Status, Blinker links, Blinker rechts
+
+#include"FastLED.h"                       //Include libs
+#include <Adafruit_SSD1306.h>
+#include <Adafruit_GFX.h>
+#include <gfxfont.h>
 
 #define NUM_LEDS 10                        //Number of LEDs
 #define DATA_PIN 3                        //Data PIN on D3
 #define CLOCK_PIN 2                       //Clock PIN D2
 #define LED_SPEED 500                     //Cycle speed
-uint8_t max_bright=255;                   //define brightness limiter
+uint8_t max_bright=10;                   //define brightness limiter
 CRGB leds[NUM_LEDS];                      //LED definition
+
+//INPUTS-------------------------
+int sensorPinx = A0;                      //FOR TESTING ONLY!!!!!!!!!!! --> Later for measuring speedvalue
+int sensorPiny = A1;                      //FOR TESTING ONLY!!!!!!!!!!!
+int BLINKERlinks = 4;                     //Blinker links
+int BLINKERrechts = 5;                    //Blinker rechts
+int BREAK = 7;                            //BREMSE
+int CL15 = 12;                            //Zündungssignal
+//int Ubattery = A1;
+//int SPEEDsensor =A0;
+
+//OUTPUTS-------------------------
 int MOTOR = 10;                           //Motor output pin
-//speedSENSOR and Values
-//int sensorValue = 0;        // value read from the pot --> Fällt weg weil wir y value nehmen
-int outputValue = 0;        // value output to the PWM (analog out)
-//directionSENSORS and Values
-int sensorPinx = A0;
-int sensorPiny = A1; 
+
+//set Sensor variables to 0
 int sensorValuex = 0;
 int sensorValuey = 0;   
-
+int outputValue = 0;  // value output to the PWM (analog out)
 
 //------------------------------------ setup section ------------------------//
 
@@ -25,12 +39,16 @@ void setup() {
   Serial.begin(9600);
   FastLED.addLeds<APA102, DATA_PIN, CLOCK_PIN, BGR>(leds, NUM_LEDS);                                    //initialize LED Array
   FastLED.setBrightness(max_bright);                                                                    //Limit the brightness
+  pinMode(CL15, INPUT);
   LEDstartup();                                                                                         //Perform LEDstartup animation
 }
 
 //------------------------------------ loop section------------------------//
 
 void loop() {
+  
+  while (digitalRead(CL15) != HIGH) {
+
 
 if(sensorValuey < 200 ) {
   analogWrite(MOTOR, outputValue);
@@ -65,8 +83,16 @@ mainlight();
   else {
     mainlight();
   }
-   //--------------------/handle light operations--------------------------//
+//--------------------/handle light operations--------------------------//
+
+  }
+ nolight();   //Wenn CL15 aus ist, alle Lichter ausschalten
 }
+
+
+
+
+
 //------------------------------------ functions ------------------------//
 void LEDstartup (void) {
   for(int Ledpos = 0; Ledpos < NUM_LEDS; Ledpos++) {                                                    //Cycle trough LEDs 
