@@ -20,7 +20,8 @@ int BLINKERrechts = 4;                    //Blinker rechts
 int BREAK = 6;                            //BREMSE
 int CL15 = 12;                            //Zündungssignal
 bool firststart = true;                   //Erster start?
-int Ubattery = A7;                        //Ubattery--------|100K|-----A2-----|200K|-----GND
+bool drive = false;                       //Fahr ich??
+int Ubattery = A7;                        //Ubattery--------|100K|-----A2-----|2 00K|-----GND
 int SPEEDsensor =A0;                      //
 
 //OUTPUTS-------------------------
@@ -48,7 +49,7 @@ void loop() {
   
   while (digitalRead(CL15) == LOW) {                                                                 //check if ignition is on
 
-  if(analogRead(Ubattery) < 750) {                                                                      //voll= 13,8V (866 bit) , Leer= 10,5V (716 bit) Faktor: 68,2
+  if((analogRead(Ubattery) < 750)  && (drive == false)) {                                                                      //voll= 13,8V (866 bit) , Leer= 10,5V (716 bit) Faktor: 68,2
 
     while (digitalRead(CL15) != HIGH) {
       Serial.println("PLEASE CHARGE!");
@@ -79,11 +80,13 @@ if(speedValue > 10 ) {
   outputValue = map(speedValue, 0, 1024, 0, 255);
   if(digitalRead(BREAK) == LOW) {
     analogWrite(MOTOR, 0); 
+    drive = false;
   }
   else{
   analogWrite(MOTOR, outputValue);
   Serial.print("Aktuelle Geschwindigkeit: ");
   Serial.println(outputValue);
+  drive = true;
   }
  
 }
@@ -96,6 +99,7 @@ else {
   analogWrite(MOTOR, outputValue);
   Serial.print("Aktuelle Geschwindigkeit: ");
   Serial.println(outputValue);
+  drive = false;
 }
 
 
@@ -348,6 +352,7 @@ void BREAKlight (void) {
 }
 
 void pleasecharge(void) {
+  analogWrite(MOTOR, 0);
   leds[10] =CRGB(255,0,0);
   delay(100);
   FastLED.show(); 
