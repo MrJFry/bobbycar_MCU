@@ -1,3 +1,9 @@
+// Hi Jonas! 
+// Wenn du den Bremsbutton auf der fernbedienung drückst sollte der Motor anfangen hochzufaden bis er auf voller Geschwindigkeit ist.
+// Wenn du den knopf wieder loslässt bremst er ab auf 0.
+
+
+
 //INPUTS-------------------------
 int BLINKERlinks = 5;                     //Blinker links
 int BLINKERrechts = 4;                    //Blinker rechts
