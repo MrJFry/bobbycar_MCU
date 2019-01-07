@@ -1,4 +1,4 @@
-//------------------------------------ BOBBYCAR_MCU ------------------------//
+/*/------------------------------------ BOBBYCAR_MCU ------------------------/*/
 
 //LED ANORDNUNG: MCU > (0,1,2,3,4,5,6,7,8,9), (10),   (11,12),       (13,14)
 //                      Rücklicht           , Status, Blinker links, Blinker rechts
@@ -18,6 +18,7 @@ CRGB leds[NUM_LEDS];                      //LED definition
 int BLINKERlinks = 5;                     //Blinker links
 int BLINKERrechts = 4;                    //Blinker rechts
 int BREAK = 6;                            //BREMSE
+int DRIVE = 7;                            //Geradeaus Fahren Button
 int CL15 = 12;                            //Zündungssignal
 bool firststart = true;                   //Erster start?
 bool drive = false;                       //Fahr ich??
@@ -49,13 +50,12 @@ void loop() {
   
   while (digitalRead(CL15) == LOW) {                                                                 //check if ignition is on
 
-  if((analogRead(Ubattery) < 750)  && (drive == false)) {                                                                      //voll= 13,8V (866 bit) , Leer= 10,5V (716 bit) Faktor: 68,2
+  if((analogRead(Ubattery) < 10)  && (drive == false)) {                                                                      //voll= 13,8V (866 bit) , Leer= 10,5V (716 bit) Faktor: 68,2
 
     while (digitalRead(CL15) != HIGH) {
       Serial.println("PLEASE CHARGE!");
       Serial.print("Battery: ");
       Serial.println(analogRead(Ubattery));
-      pleasecharge();
       nolight();
     }
   }
@@ -65,6 +65,8 @@ void loop() {
     firststart = false;
   }
     
+ //-------------------------------HANDLE DRIVING OPERATIONS---------------------------
+ /*/-------------------POTI------------------------------------------------------------
  
  //sensorValuex = analogRead(sensorPinx);
  //sensorValuey = analogRead(sensorPiny);
@@ -101,7 +103,33 @@ else {
   Serial.println(outputValue);
   drive = false;
 }
+//-------------------/POTI------------------------------------------------------------*/
 
+
+//-------------------PUSHBUTTON-------------------------------------------------------
+if(digitalRead(DRIVE) == LOW) {
+
+  if(digitalRead(DRIVE) == LOW && (drive == false)) {
+  motorfade();
+  drive = true;
+  
+  }
+  if(digitalRead(DRIVE) == LOW && (drive == true)) {
+    analogWrite(MOTOR,255);
+    drive = true;
+    Serial.println("255");
+  }
+}
+  else {
+    analogWrite(MOTOR,0);
+    drive = false;
+  }
+
+
+//-------------------/PUSHBUTTON------------------------------------------------------*/
+
+
+//-------------------------------/HANDLE DRIVING OPERATIONS---------------------------
 
 
 //--------------------handle light operations--------------------------//
@@ -304,17 +332,17 @@ void TURNright (void) {
 void nolight (void) {
   for(int Ledpos = 0; Ledpos < NUM_LEDS; Ledpos++) {                                                    //Cycle trough LEDs 
      if(Ledpos == 10){
-        if(analogRead(Ubattery) < 750) {
+        if(analogRead(Ubattery) < 10) {
           pleasecharge();
         }
       else{  
-      leds[Ledpos] =CRGB(55,0,55);
+      leds[Ledpos] =CRGB(35,0,35);
       FastLED.show(); 
       delay(100);
       leds[Ledpos] =CRGB(0,0,0);
       FastLED.show(); 
-      delay(500);
-      leds[Ledpos] =CRGB(55,0,55);
+      delay(1000);
+      leds[Ledpos] =CRGB(35,0,35);
       FastLED.show(); 
       }
      }
@@ -359,16 +387,23 @@ void pleasecharge(void) {
   leds[10] =CRGB(0,0,0);
   delay(100);
   FastLED.show(); 
+  Serial.print("UNDERVOLTAGE");
   
 }
 
 void motorfade(void){
   for(int fade=0; fade < 255; fade = fade+5){
+    if(digitalRead(DRIVE) == HIGH && (drive == false)){
+      analogWrite(MOTOR, 0);
+      Serial.println("0");
+      BREAKlight();
+    }
+    else{
     analogWrite(MOTOR, fade);
     Serial.print("Aktuelle Geschwindigkeit: ");
     Serial.println(fade);
-    delay(200);
+    delay(300);
+    }
   }
 }
-
   //------------------------------------ END ------------------------//
